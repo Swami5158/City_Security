@@ -16,13 +16,13 @@ Open → `http://localhost:3000` · API Docs → `http://localhost:3001/api-docs
 City infrastructure systems — traffic lights, water pumps, power stations, CCTV — are managed through APIs that typically have **no access control, no monitoring, and no audit trail**.
 
 The problem statement requires exactly 3 things:
------------------------------------------------------------------------------------------------------
-| Requirement                              | What UrbanShield Does                                  |
-|------------------------------------------|--------------------------------------------------------|
+
+| Requirement | What UrbanShield Does |
+|---|---|
 | ✅ Define user roles for city operations | 5 city-specific roles, 7 permissions, all stored in DB |
-| ✅ Enforce access restrictions           | JWT + RBAC middleware on every single API route        |
-| ✅ Record access-related activity        | Full audit log with before/after state on every request|
------------------------------------------------------------------------------------------------------
+| ✅ Enforce access restrictions | JWT + RBAC middleware on every single API route |
+| ✅ Record access-related activity | Full audit log with before/after state on every request |
+
 ---
 
 ## Architecture
@@ -117,7 +117,7 @@ Incoming Request
 
 All roles and permissions are **stored in the database** and seeded from `prisma/seed.ts`. Nothing is hardcoded in application logic.
 
-------------------------------------------------------
+```
 PERMISSIONS
 ───────────────────────────────────────────────────
 users:manage          → Create, edit, deactivate users
@@ -127,10 +127,8 @@ infrastructure:control→ Change asset operational status
 audit:view            → Read audit logs and reports
 emergency:override    → Execute emergency commands
 reports:view          → View generated security reports
----------------------------------------------------------
 
 
----------------------------------------------------
 ROLES & THEIR PERMISSIONS
 ───────────────────────────────────────────────────
 SUPER_ADMIN      all 7 permissions
@@ -155,7 +153,7 @@ AUDITOR          infrastructure:view
                  audit:view
                  reports:view
                  └─ Compliance — read everything, change nothing
-
+```
 
 ---
 
@@ -247,15 +245,15 @@ This directly fulfills the **"review purposes"** requirement of the problem stat
 ## Demo Credentials
 
 All passwords: `password123`
-------------------------------------------------------------------------------------------------------
-| Role            | Email                  | What to Demo                                            |
-|-----------------|------------------------|---------------------------------------------------------|
-| `SUPER_ADMIN`   | super_admin@test.com   | User management, resolve threat alerts, generate report |
-| `TRAFFIC_ADMIN` | traffic_admin@test.com | Full CRUD on infrastructure assets                      |
-| `MAINTENANCE`   | maintenance@test.com   | View-only — edit buttons are hidden                     |
-| `PUBLIC_SAFETY` | public_safety@test.com | Emergency override with password re-confirm             |
-| `AUDITOR`       | auditor@test.com       | Audit logs, before/after diffs, security reports        |
-------------------------------------------------------------------------------------------------------
+
+| Role | Email | What to Demo |
+|---|---|---|
+| `SUPER_ADMIN` | super_admin@test.com | User management, resolve threat alerts, generate report |
+| `TRAFFIC_ADMIN` | traffic_admin@test.com | Full CRUD on infrastructure assets |
+| `MAINTENANCE` | maintenance@test.com | View-only — edit buttons are hidden |
+| `PUBLIC_SAFETY` | public_safety@test.com | Emergency override with password re-confirm |
+| `AUDITOR` | auditor@test.com | Audit logs, before/after diffs, security reports |
+
 ---
 
 ## 5-Minute Judge Demo Script
@@ -344,30 +342,83 @@ POST   /api/reports/generate        users:manage
 ---
 
 ## Security Features
----------------------------------------------------------------------------------------------
-| # | Feature                    | Implementation                                            |
-|---|----------------------------|---------------------------------------------------- ------|
-| 1 | JWT Authentication         | 24h expiry, userId + role + permissions in payload        |
-| 2 | Password Hashing           | bcrypt, 10 rounds                                         |                                 
-| 3 | Role-Based Access Control  | Every route declares required permission                  |
-| 4 | Dynamic Permissions        | Time-based + district rules from JSON config              |
-| 5 | Tiered Rate Limiting       | auth:5/min · emergency:10/min · api:100/min               |
-| 6 | Security Headers           | helmet.js on all responses                                |
-| 7 | Input Validation           | Zod schemas on all request bodies                         |
-| 8 | Full Audit Logging         | Every request: user, role, IP, action, before/after state |
-| 9 | Automated Threat Detection | Background worker, rules-driven, auto-locks users         |
-| 10 | Emergency Re-verification | Password re-checked with bcrypt before override executes  |
-| 11 | Soft Delete               | Users deactivated with isActive=false, never hard deleted |
-| 12 | Auto Security Reports     | Daily worker, zero manual steps                           |
-----------------------------------------------------------------------------------------------
 
+| # | Feature | Implementation |
+|---|---|---|
+| 1 | JWT Authentication | 24h expiry, userId + role + permissions in payload |
+| 2 | Password Hashing | bcrypt, 10 rounds |
+| 3 | Role-Based Access Control | Every route declares required permission |
+| 4 | Dynamic Permissions | Time-based + district rules from JSON config |
+| 5 | Tiered Rate Limiting | auth:5/min · emergency:10/min · api:100/min |
+| 6 | Security Headers | helmet.js on all responses |
+| 7 | Input Validation | Zod schemas on all request bodies |
+| 8 | Full Audit Logging | Every request: user, role, IP, action, before/after state |
+| 9 | Automated Threat Detection | Background worker, rules-driven, auto-locks users |
+| 10 | Emergency Re-verification | Password re-checked with bcrypt before override executes |
+| 11 | Soft Delete | Users deactivated with isActive=false, never hard deleted |
+| 12 | Auto Security Reports | Daily worker, zero manual steps |
+
+---
+
+## File Structure
+
+```
+urban-shield/
+├── docker-compose.yml
+├── .env.example
+├── demo.sh                          ← curl-based demo script
+├── README.md
+│
+├── backend/
+│   ├── Dockerfile
+│   ├── entrypoint.sh                ← migrate deploy → seed → start
+│   ├── prisma/
+│   │   ├── schema.prisma            ← all DB models
+│   │   └── seed.ts                  ← 5 users + 20 assets
+│   ├── config/
+│   │   ├── threat-rules.json        ← threat detection rules (no hardcoding)
+│   │   └── access-policy.json       ← time + district rules (no hardcoding)
+│   └── src/
+│       ├── middleware/
+│       │   ├── auth.ts              ← JWT verification
+│       │   ├── rbac.ts              ← permission checking
+│       │   ├── rateLimit.ts         ← tiered limits
+│       │   └── audit.ts             ← auto-logging every request
+│       ├── services/
+│       │   ├── threatDetectionService.ts
+│       │   ├── dynamicPermissionService.ts
+│       │   └── reportService.ts
+│       ├── workers/
+│       │   ├── threatDetectionWorker.ts   ← runs every 60s
+│       │   └── reportGeneratorWorker.ts   ← runs every 24h
+│       └── routes/
+│           ├── auth.ts
+│           ├── infrastructure.ts
+│           ├── emergency.ts
+│           ├── users.ts
+│           └── audit.ts
+│
+└── frontend/
+    └── src/
+        ├── components/
+        │   ├── ThreatAlertBanner.tsx    ← live polling every 30s
+        │   └── PermissionGate.tsx       ← hides UI based on permissions
+        └── pages/
+            ├── Dashboard.tsx
+            ├── Infrastructure.tsx
+            ├── UserManagement.tsx
+            ├── AuditLogs.tsx
+            ├── AttackSimulator.tsx      ← real 403 demo for judges
+            └── SecurityReports.tsx
+```
 
 ---
 
 ## One Command Setup
 
 ```bash
-# 1. Clone and configuregit clone <repo-url>
+# 1. Clone and configure
+git clone <repo-url>
 cd urban-shield
 cp .env.example .env
 
@@ -402,14 +453,16 @@ POSTGRES_DB=urbanshield
 ---
 
 ## Tech Stack
----------------------------------------------------------
-| Layer    |            Technology                      |
-|----------|--- ----------------------------------------|
-| Backend  | Node.js · Express · TypeScript             |
-| Database | PostgreSQL 15 · Prisma ORM                 |
-| Auth     | JWT (jsonwebtoken) · bcrypt                |
-| Security | helmet.js · cors · express-rate-limit · Zod|
-| Frontend | React · TypeScript · Vite · TailwindCSS    |
-| DevOps   | Docker · docker-compose                    |
----------------------------------------------------------
 
+| Layer | Technology |
+|---|---|
+| Backend | Node.js · Express · TypeScript |
+| Database | PostgreSQL 15 · Prisma ORM |
+| Auth | JWT (jsonwebtoken) · bcrypt |
+| Security | helmet.js · cors · express-rate-limit · Zod |
+| Frontend | React · TypeScript · Vite · TailwindCSS |
+| DevOps | Docker · docker-compose |
+
+---
+
+*Built for the Secure Access & API Protection for Urban Systems hackathon challenge.*
