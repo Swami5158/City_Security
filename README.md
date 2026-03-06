@@ -360,58 +360,6 @@ POST   /api/reports/generate        users:manage
 
 ---
 
-## File Structure
-
-```
-urban-shield/
-├── docker-compose.yml
-├── .env.example
-├── demo.sh                          ← curl-based demo script
-├── README.md
-│
-├── backend/
-│   ├── Dockerfile
-│   ├── entrypoint.sh                ← migrate deploy → seed → start
-│   ├── prisma/
-│   │   ├── schema.prisma            ← all DB models
-│   │   └── seed.ts                  ← 5 users + 20 assets
-│   ├── config/
-│   │   ├── threat-rules.json        ← threat detection rules (no hardcoding)
-│   │   └── access-policy.json       ← time + district rules (no hardcoding)
-│   └── src/
-│       ├── middleware/
-│       │   ├── auth.ts              ← JWT verification
-│       │   ├── rbac.ts              ← permission checking
-│       │   ├── rateLimit.ts         ← tiered limits
-│       │   └── audit.ts             ← auto-logging every request
-│       ├── services/
-│       │   ├── threatDetectionService.ts
-│       │   ├── dynamicPermissionService.ts
-│       │   └── reportService.ts
-│       ├── workers/
-│       │   ├── threatDetectionWorker.ts   ← runs every 60s
-│       │   └── reportGeneratorWorker.ts   ← runs every 24h
-│       └── routes/
-│           ├── auth.ts
-│           ├── infrastructure.ts
-│           ├── emergency.ts
-│           ├── users.ts
-│           └── audit.ts
-│
-└── frontend/
-    └── src/
-        ├── components/
-        │   ├── ThreatAlertBanner.tsx    ← live polling every 30s
-        │   └── PermissionGate.tsx       ← hides UI based on permissions
-        └── pages/
-            ├── Dashboard.tsx
-            ├── Infrastructure.tsx
-            ├── UserManagement.tsx
-            ├── AuditLogs.tsx
-            ├── AttackSimulator.tsx      ← real 403 demo for judges
-            └── SecurityReports.tsx
-```
-
 ---
 
 ## One Command Setup
@@ -465,4 +413,3 @@ POSTGRES_DB=urbanshield
 
 ---
 
-*Built for the Secure Access & API Protection for Urban Systems hackathon challenge.*
