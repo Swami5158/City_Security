@@ -1,0 +1,84 @@
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  password  String
+  isActive  Boolean  @default(true)
+  role      Role     @relation(fields: [roleId], references: [id])
+  roleId    String
+  district  String?
+  createdAt DateTime @default(now())
+}
+
+model Role {
+  id          String       @id @default(uuid())
+  name        String       @unique
+  permissions Permission[]
+  users       User[]
+}
+
+model Permission {
+  id          String  @id @default(uuid())
+  name        String  @unique
+  description String?
+  roles       Role[]
+}
+
+model InfrastructureAsset {
+  id        String   @id @default(uuid())
+  name      String
+  type      String
+  location  String
+  district  String
+  status    String
+  config    String?  // SQLite doesn't support Json, using String for JSON
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model AuditLog {
+  id           String   @id @default(uuid())
+  userId       String
+  userEmail    String
+  role         String
+  endpoint     String
+  action       String
+  ipAddress    String
+  userAgent    String
+  success      Boolean
+  deniedReason String?
+  beforeState  String?  // JSON string
+  afterState   String?  // JSON string
+  isEmergency  Boolean  @default(false)
+  isFlagged    Boolean  @default(false)
+  timestamp    DateTime @default(now())
+}
+
+model ThreatAlert {
+  id          String    @id @default(uuid())
+  type        String
+  severity    String
+  userId      String?
+  userEmail   String?
+  description String
+  resolvedAt  DateTime?
+  isResolved  Boolean   @default(false)
+  createdAt   DateTime  @default(now())
+}
+
+model SecurityReport {
+  id          String   @id @default(uuid())
+  generatedAt DateTime @default(now())
+  period      String
+  summary     String   // JSON string
+  reportData  String   // JSON string
+  generatedBy String
+}

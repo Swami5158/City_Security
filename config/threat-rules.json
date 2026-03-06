@@ -1,0 +1,32 @@
+{
+  "rules": [
+    {
+      "id": "BRUTE_FORCE",
+      "description": "Multiple failed logins",
+      "condition": { "action": "LOGIN_FAILED", "threshold": 5, "windowMinutes": 2 },
+      "response": "AUTO_LOCK_USER",
+      "severity": "HIGH"
+    },
+    {
+      "id": "REPEATED_FORBIDDEN",
+      "description": "Repeated unauthorized access attempts",
+      "condition": { "success": false, "threshold": 10, "windowMinutes": 5 },
+      "response": "ALERT_SUPER_ADMIN",
+      "severity": "MEDIUM"
+    },
+    {
+      "id": "AFTER_HOURS_EMERGENCY",
+      "description": "Emergency override outside business hours",
+      "condition": { "action": "EMERGENCY_OVERRIDE", "outsideHours": { "start": 9, "end": 17 } },
+      "response": "FLAG_AND_ALERT",
+      "severity": "CRITICAL"
+    },
+    {
+      "id": "MASS_DELETE",
+      "description": "Multiple deletes in short window",
+      "condition": { "action": "DELETE", "threshold": 3, "windowMinutes": 1 },
+      "response": "FLAG_AND_ALERT",
+      "severity": "HIGH"
+    }
+  ]
+}

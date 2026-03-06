@@ -1,0 +1,19 @@
+{
+  "timeBasedRules": [
+    {
+      "role": "MAINTENANCE",
+      "writeAccess": { "startHour": 9, "endHour": 17 },
+      "outsideHoursPermissions": ["infrastructure:view"]
+    }
+  ],
+  "districtRules": [
+    {
+      "role": "TRAFFIC_ADMIN",
+      "restrictToDistrict": false
+    },
+    {
+      "role": "MAINTENANCE",
+      "restrictToDistrict": true
+    }
+  ]
+}

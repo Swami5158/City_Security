@@ -1,0 +1,5 @@
+{
+  "name": "UrbanShield",
+  "description": "Secure city infrastructure management system with automated threat detection and audit logging.",
+  "requestFramePermissions": []
+}
